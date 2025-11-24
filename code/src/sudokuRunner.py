@@ -169,6 +169,7 @@ def testPruningAlgorithms():
     print('\n'+str(board1.equals(answer1))) """
 
     # run_experiments()
+    basic_backtrack()
 
     
 def run_experiments():
@@ -214,3 +215,19 @@ def run_experiments():
         writer.writerows(results)
 
     print(f"Results written to {output_csv}")
+
+
+def basic_backtrack() :
+    board1:Board
+    with open('src/sudoku_boards/board_4x4.sud','r') as file: # 16x16.sud','r') as file:
+        board1 = Board(file=file)
+
+    count, seconds = sudokuSearch.backtrackSudokuTime(board1)
+    print('\nSolved 4x4 board w/ normal backtracking in ' + str(seconds) + ' seconds with ' + str(count) + ' backtracking steps\n')
+
+    board1:Board
+    with open('src/sudoku_boards/board2.sud','r') as file: # 16x16.sud','r') as file:
+        board1 = Board(file=file)
+
+    count, seconds = sudokuSearch.backtrackSudokuTime(board1)
+    print('\nSolved 9x9 board w/ normal backtracking in ' + str(seconds) + ' seconds with ' + str(count) + ' backtracking steps\n')
