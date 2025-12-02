@@ -60,7 +60,7 @@ def solveSudoku(sudokuBoard: Board, row: int, col: int, nodeExpandFunc: Callable
 
         else:
             if solveSudoku(sudokuBoard, row, col + 1, nodeExpandFunc):
-                return sudokuBoard.validate() == None  # Returning board validity
+                return sudokuBoard.validate() == None
 
         sudokuBoard.fillCell(row, col, ' ')
         BACKTRACK_COUNTER += 1
@@ -126,7 +126,6 @@ def backtrackPrunedSudokuTime(board: Board):
 
 
 def initializeDomains(board: Board):
-    """Initialize domains for all cells (possible values each cell can take)."""
     domains = {}
     for i in range(board.lexiconLength):
         for j in range(board.lexiconLength):
@@ -140,14 +139,10 @@ def initializeDomains(board: Board):
 
 
 def forwardCheckingNodeExpansion(board: Board, row: int, col: int, nodeExpArgs=None):
-    """
-    Forward checking node expansion.
-    nodeExpArgs: current domains (dict)
-    """
+
     if nodeExpArgs is None:
         nodeExpArgs = initializeDomains(board)
 
-    # Get possible values for this cell from its domain
     choices = nodeExpArgs[(row, col)]
     return (choices, nodeExpArgs)
 
