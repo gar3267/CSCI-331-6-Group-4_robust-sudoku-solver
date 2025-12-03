@@ -1,7 +1,6 @@
 from typing import Callable
 from src.sudokuBoard import Board
 import time
-import copy
 
 BACKTRACK_COUNTER = 0
 
@@ -19,8 +18,8 @@ def solveSudoku(sudokuBoard:Board, row:int, col:int, nodeExpandFunc:Callable[[Bo
         col = 0
 
     # If cell is already occupied, then move forward
-    if not sudokuBoard.isCellEmpty(row, col) :
-        return solveSudoku(sudokuBoard, row, col + 1, nodeExpandFunc)
+    if not sudokuBoard.isCellEmpty(row, col):
+        return solveSudoku(sudokuBoard, row, col + 1, nodeExpandFunc, nodeExpArgs)
 
     result = nodeExpandFunc(sudokuBoard, row, col, nodeExpArgs)
     choiceDomain = result[0]
@@ -30,19 +29,41 @@ def solveSudoku(sudokuBoard:Board, row:int, col:int, nodeExpandFunc:Callable[[Bo
         sudokuBoard.fillCell(row, col, str(num))
 
         if nodeExpandFunc == forwardCheckingNodeExpansion:
-            # Perform forward checking before recursing
-            new_domains = forwardCheckDomains(sudokuBoard, row, col, str(num), nodeExpArgs)
-            if new_domains is None:
-                sudokuBoard.fillCell(row, col, ' ')
-                BACKTRACK_COUNTER += 1
-                continue  # Domain wipeout, backtrack early
+            domains = nodeExpArgs
+            removals = []
 
-            if solveSudoku(sudokuBoard, row, col + 1, nodeExpandFunc, new_domains):
-                return sudokuBoard.validate() == None
+            size = sudokuBoard.lexiconLength
+            box_size = int(size ** 0.5)
+
+            neighbors = set()
+            for i in range(size):
+                neighbors.add((row, i));
+                neighbors.add((i, col))
+            start_row, start_col = (row // box_size) * box_size, (col // box_size) * box_size
+            for i in range(start_row, start_row + box_size):
+                for j in range(start_col, start_col + box_size):
+                    neighbors.add((i, j))
+            neighbors.discard((row, col))
+
+            wipeout = False
+            for r, c in neighbors:
+                if sudokuBoard.isCellEmpty(r, c) and str(num) in domains[(r, c)]:
+                    domains[(r, c)].remove(str(num))
+                    removals.append(((r, c), str(num)))
+                    if not domains[(r, c)]:
+                        wipeout = True
+                        break
+
+            if not wipeout:
+                if solveSudoku(sudokuBoard, row, col + 1, nodeExpandFunc, domains):
+                    return True
+
+            for cell, removed_val in removals:
+                domains[cell].append(removed_val)
 
         else:
             if solveSudoku(sudokuBoard, row, col + 1, nodeExpandFunc):
-                return sudokuBoard.validate()==None # Returning board validity
+                return sudokuBoard.validate() == None # Returning board validity
             
         # Backtrack
         sudokuBoard.fillCell(row, col, ' ')
@@ -51,22 +72,22 @@ def solveSudoku(sudokuBoard:Board, row:int, col:int, nodeExpandFunc:Callable[[Bo
     return False
 
 
-def backtrackNodeExpansion(board:Board, row=None, col=None, nodeExpArgs=None):
-    return (board.lexicon,None)
+def backtrackNodeExpansion(board: Board, row=None, col=None, nodeExpArgs=None):
+    return (board.lexicon, None)
 
 
-def basicPrunedNodeExpansion(board:Board, row:int, col:int, nodeExpArgs=None):
+def basicPrunedNodeExpansion(board: Board, row: int, col: int, nodeExpArgs=None):
     choices = board.lexicon
     result = []
 
     for choice in choices:
-        if board.validPlacement(row,col,choice):
+        if board.validPlacement(row, col, choice):
             result.append(choice)
-        
-    return (result,None)
+
+    return (result, None)
 
 
-def backtrackSudoku(board:Board):
+def backtrackSudoku(board: Board):
     global BACKTRACK_COUNTER
     BACKTRACK_COUNTER = 0
 
@@ -75,7 +96,7 @@ def backtrackSudoku(board:Board):
     return BACKTRACK_COUNTER
 
 
-def backtrackSudokuTime(board:Board):
+def backtrackSudokuTime(board: Board):
     global BACKTRACK_COUNTER
     BACKTRACK_COUNTER = 0
     start_time = time.perf_counter()
@@ -87,7 +108,7 @@ def backtrackSudokuTime(board:Board):
     return BACKTRACK_COUNTER, end_time - start_time
 
 
-def backtrackPrunedSudoku(board:Board):
+def backtrackPrunedSudoku(board: Board):
     global BACKTRACK_COUNTER
     BACKTRACK_COUNTER = 0
 
@@ -96,7 +117,7 @@ def backtrackPrunedSudoku(board:Board):
     return BACKTRACK_COUNTER
 
 
-def backtrackPrunedSudokuTime(board:Board):
+def backtrackPrunedSudokuTime(board: Board):
     global BACKTRACK_COUNTER
     BACKTRACK_COUNTER = 0
     start_time = time.perf_counter()
@@ -120,41 +141,6 @@ def initializeDomains(board: Board):
             else:
                 domains[(i, j)] = [board.board[i][j]]
     return domains
-
-
-def forwardCheckDomains(board: Board, row: int, col: int, val: str, domains: dict):
-    """
-    Perform forward checking:
-    remove `val` from the domain of all neighbors (same row, column, box).
-    Return a new domains dict (copied), or None if a domain becomes empty.
-    """
-    new_domains = copy.deepcopy(domains)
-    new_domains[(row, col)] = [val]  # Fixed domain
-
-    size = board.lexiconLength
-    box_size = int(size ** 0.5)
-
-    # Compute all neighbor coordinates
-    neighbors = set()
-    for i in range(size):
-        neighbors.add((row, i))  # Row
-        neighbors.add((i, col))  # Col
-    start_row = (row // box_size) * box_size
-    start_col = (col // box_size) * box_size
-    for i in range(start_row, start_row + box_size):
-        for j in range(start_col, start_col + box_size):
-            neighbors.add((i, j))
-
-    neighbors.discard((row, col))
-
-    for (r, c) in neighbors:
-        if board.isCellEmpty(r, c):
-            if val in new_domains[(r, c)]:
-                new_domains[(r, c)].remove(val)
-                if len(new_domains[(r, c)]) == 0:
-                    return None  # Domain wiped out → fail early
-
-    return new_domains
 
 
 def forwardCheckingNodeExpansion(board: Board, row: int, col: int, nodeExpArgs=None):
@@ -193,9 +179,8 @@ def forwardCheckingSudokuTime(board: Board):
 
 
 if __name__ == "__main__":
-    
-    board1:Board
-    with open('src/sudoku_boards/board1.sud','r') as file:
+    board1: Board
+    with open('src/sudoku_boards/board1.sud', 'r') as file:
         board1 = Board(file=file)
     print(board1)
 
@@ -205,7 +190,7 @@ if __name__ == "__main__":
     print('\nSolved in ' + str(seconds) + ' seconds with ' + str(count) + ' backtracking steps\n')
     print(board1)
 
-    answer1:Board
-    with open('src/sudoku_boards/answers/answer1.sud','r') as file:
+    answer1: Board
+    with open('src/sudoku_boards/answers/answer1.sud', 'r') as file:
         answer1 = Board(file=file)
-    print('\n'+str(board1.equals(answer1)))
+    print('\n' + str(board1.equals(answer1)))
