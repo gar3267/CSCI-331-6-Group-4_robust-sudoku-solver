@@ -168,8 +168,8 @@ def testPruningAlgorithms():
         answer1 = Board(file=file)
     print('\n'+str(board1.equals(answer1))) """
 
-    # run_experiments()
-    basic_backtrack()
+    run_experiments()
+    # basic_backtrack()
 
     
 def run_experiments():
