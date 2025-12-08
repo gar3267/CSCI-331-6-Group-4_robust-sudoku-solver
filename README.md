@@ -6,9 +6,9 @@ Upon running you aere given a simple PTUI to unit test the board class, or run t
 ## Developers:
 Garett (Gayle) Rogers: Worked on PTUI, system to coordinate and collect and print data on running of sudoku algorithms. Also implemented the board class and created the .sud file format.
 
-Veronika K: Created the basic pruning algorithm, and validate choice method for the backtracking algorithm.
+Veronika Kirievskaya: Created the basic pruning algorithm, and validate choice method for the backtracking algorithm.
 
-Mate: Created the forward checking algorithm.
+Mate Revishvili: Created the forward checking algorithm.
 
 ## How to Run:
 Inside the code folder you need to run the "sudokuSolverRunner.py" file. Upon running you will be given 4 choices, 2 of them are for board unit testing, 1 is quit, and 1 is to run the sudoku algorithms. Do beware that there is no timeout and when you get to the basic backtrack you will most likely need to terminate the program.
